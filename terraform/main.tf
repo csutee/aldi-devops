@@ -1,21 +1,24 @@
 resource "kubernetes_namespace" "homework" {
-    metadata {
-        name = "production"
-    }
+	metadata {
+		name = var.namespace
+	}
 }
 
 resource "helm_release" "homework" {
-    name       = "homework"
-    chart      = "../helm/homework"
-    namespace  = kubernetes_namespace.homework.metadata[0].name
+	name      = "myapp"
+	chart     = "${path.module}/../helm"
+	namespace = kubernetes_namespace.homework.metadata[0].name
+	wait      = true
+	timeout   = 300
 
-    set {
-        name  = "image.tag"
-        value = 
-    }
-
-    set {
-        name  = "environment"
-        value = prod
-    }
+	values = [
+		yamlencode({
+			environment  = var.environment
+			replicaCount = var.replica_count
+			image = {
+				repository = var.image_repository
+				tag        = var.image_tag
+			}
+		})
+	]
 }
